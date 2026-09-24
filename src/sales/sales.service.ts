@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -7,14 +8,20 @@ import type { JwtPayload } from '../auth/strategies/jwt.strategy.js';
 import { Role } from '../generated/prisma/enums.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { CreateSaleDto } from './dto/create-sale.dto.js';
+import type { ConfigType } from '@nestjs/config';
+import negocioConfig from '../config/negocio.config.js';
 
 @Injectable()
 export class SalesService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    @Inject(negocioConfig.KEY)
+    private negocioConfiguration: ConfigType<typeof negocioConfig>,
+  ) {}
 
   async create(dto: CreateSaleDto) {
     const discountPercent = dto.discountPercent ?? 0;
-    const maxDiscount = parseInt(process.env.MAX_DISCOUNT_PERCENT ?? '0', 10);
+    const maxDiscount = this.negocioConfiguration.maxDiscountPercent;
     if (discountPercent > maxDiscount) {
       throw new BadRequestException(
         `El descuento máximo permitido es ${maxDiscount}%`,
@@ -61,7 +68,10 @@ export class SalesService {
       }),
     ]);
 
-    return { ...sale, currency: process.env.CURRENCY };
+    return {
+      ...sale,
+      currency: this.negocioConfiguration.currency,
+    };
   }
 
   findAll(user: JwtPayload) {

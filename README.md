@@ -90,7 +90,7 @@ La aplicación usa estas **10 variables**. Hoy se leen con `process.env` en dist
 
 | #   | Variable               | Tipo   | Regla de validación                                                  | Ejemplo                                      |
 | --- | ---------------------- | ------ | -------------------------------------------------------------------- | -------------------------------------------- |
-| 1   | `NODE_ENV`             | string | Solo `development`, `production` o `test`. Por defecto: `development` | `development`                                |
+| 1   | `NODE_ENV`             | string | Solo `development`, `production` o `test`. Por defecto: `development`| `development`                                |
 | 2   | `PORT`                 | number | Número entero entre 1 y 65535. Por defecto: `3000`                   | `3000`                                       |
 | 3   | `API_PREFIX`           | string | Obligatoria. Sin espacios                                            | `api`                                        |
 | 4   | `DATABASE_URL`         | string | Obligatoria. URI que empiece con `postgresql://`                     | `postgresql://user:pass@localhost:5432/motos` |

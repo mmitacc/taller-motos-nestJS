@@ -1,17 +1,25 @@
-import { Injectable, OnModuleDestroy } from '@nestjs/common';
+import { Inject, Injectable, OnModuleDestroy } from '@nestjs/common';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient } from '../generated/prisma/client.js';
+import type { ConfigType } from '@nestjs/config';
+import bdConfig from '../config/bd.config.js';
+import appConfig from '../config/app.config.js';
 
 @Injectable()
 export class PrismaService extends PrismaClient implements OnModuleDestroy {
-  constructor() {
+  constructor(
+    @Inject(bdConfig.KEY) bdConfiguration: ConfigType<typeof bdConfig>,
+    @Inject(appConfig.KEY) appConfiguration: ConfigType<typeof appConfig>,
+  ) {
     const adapter = new PrismaPg({
-      connectionString: process.env.DATABASE_URL,
+      connectionString: bdConfiguration.dataBaseUrl,
     });
     super({
       adapter,
       log:
-        process.env.NODE_ENV === 'development' ? ['warn', 'error'] : ['error'],
+        appConfiguration.nodeEnv === 'development'
+          ? ['warn', 'error']
+          : ['error'],
     });
   }
 
