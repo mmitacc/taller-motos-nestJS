@@ -1,5 +1,6 @@
 import {
   ConflictException,
+  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -7,6 +8,8 @@ import bcrypt from 'bcryptjs';
 import { RegisterDto } from '../auth/dto/register.dto.js';
 import { Role } from '../generated/prisma/enums.js';
 import { PrismaService } from '../prisma/prisma.service.js';
+import type { ConfigType } from '@nestjs/config';
+import jwtConfig from '../config/jwt.config.js';
 
 const safeSelect = {
   id: true,
@@ -18,7 +21,11 @@ const safeSelect = {
 
 @Injectable()
 export class UsersService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    @Inject(jwtConfig.KEY)
+    private jwtConfiguration: ConfigType<typeof jwtConfig>,
+  ) {}
 
   async create(dto: RegisterDto) {
     const exists = await this.prisma.user.findUnique({
@@ -26,7 +33,7 @@ export class UsersService {
     });
     if (exists) throw new ConflictException('El email ya está registrado');
 
-    const saltRounds = parseInt(process.env.BCRYPT_SALT_ROUNDS ?? '10', 10);
+    const saltRounds = this.jwtConfiguration.bcryptSaltRounds ?? 10;
     const password = await bcrypt.hash(dto.password, saltRounds);
 
     return this.prisma.user.create({

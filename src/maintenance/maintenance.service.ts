@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   ForbiddenException,
+  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -9,10 +10,16 @@ import { Role } from '../generated/prisma/enums.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { CreateMaintenanceDto } from './dto/create-maintenance.dto.js';
 import { UpdateMaintenanceDto } from './dto/update-maintenance.dto.js';
+import type { ConfigType } from '@nestjs/config';
+import negocioConfig from '../config/negocio.config.js';
 
 @Injectable()
 export class MaintenanceService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    @Inject(negocioConfig.KEY)
+    private negocioConfiguration: ConfigType<typeof negocioConfig>,
+  ) {}
 
   create(dto: CreateMaintenanceDto, user: JwtPayload) {
     return this.prisma.maintenanceOrder.create({
@@ -54,7 +61,10 @@ export class MaintenanceService {
     if (user.role === Role.CUSTOMER && order.customerId !== user.sub) {
       throw new ForbiddenException('No puedes ver órdenes de otros clientes');
     }
-    return { ...order, currency: process.env.CURRENCY };
+    return {
+      ...order,
+      currency: this.negocioConfiguration.currency,
+    };
   }
 
   async update(id: number, dto: UpdateMaintenanceDto, user: JwtPayload) {
